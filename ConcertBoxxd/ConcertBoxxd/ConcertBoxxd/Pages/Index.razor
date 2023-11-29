@@ -1,0 +1,106 @@
+﻿@page "/"
+@using ConcertBoxxd.Data;
+@using ConcertBoxxd.Services;
+@inject ConcertAPIService setlistfm
+@inject DBService dbservice
+@using System;
+@using System.Text.RegularExpressions;
+
+<input class="form-control" type="text" @bind=concertlink />
+<button class="btn btn-primary" @onclick="GetConcert">Add Concert</button>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Artist</th>
+            <th>Date</th>
+            <th>Tour</th>
+            <th>Venue</th>
+			<th>Location</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in showSongs)
+        {
+            <tr @onclick="() => item.Key.IsRowExpanded = !item.Key.IsRowExpanded">
+                <td>@item.Key.Artist</td>
+                <td>@item.Key.Date</td>
+                <td>@item.Key.Tour</td>
+                <td>@item.Key.Venue</td>
+                <td>@item.Key.City , @item.Key.State</td>
+            </tr>
+            if (item.Key.IsRowExpanded)
+            {
+                <tr>
+                    @foreach(var song in item.Value)
+                    {
+                        <td>@song.Name</td>
+
+                    }
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+
+@code
+{
+    @inject NavigationManager NavigationManager;
+    public string concertlink = "";
+    public List<Concert> shows = new List<Concert>();
+    public List<Song> setlist = new List<Song>();
+    public Dictionary<Concert, List<Song>> showSongs = new Dictionary<Concert, List<Song>>();
+    //public List<Song> setlist
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (firstRender) {
+            int totalConcerts = await dbservice.ConcertCount();
+
+            for (int i = 1; i <= totalConcerts; i++) 
+            {
+               Concert tempConcert = (await dbservice.GetConcert(i));
+               List<Song> temoSetlist = (await dbservice.GetSetlist(i));
+                showSongs.Add(tempConcert, temoSetlist);
+
+                StateHasChanged();
+            }
+        }
+    }
+
+    public async Task GetConcert()
+    {
+
+        int index = await dbservice.ConcertCount()+ 1;
+        string mbid = GetMbid(concertlink);
+        Concert concertHolder = await setlistfm.GetConcertData(mbid, index);
+        await dbservice.PostConcert(concertHolder);
+        NavigationManager.NavigateTo("/", true);
+        concertlink = "";
+
+    }
+    public async Task GetSetlist(string mbid, int index)
+    {
+    }
+    public string GetMbid(string url)
+    {
+        //        string pattern = @"-(.*).html";
+        string pattern = @"([a-z0-9]*).html";
+        // Use regex to match the pattern in the URL
+        Match match = Regex.Match(url, pattern);
+
+        // Check if the match is successful
+        if (match.Success)
+        {
+            // Extract the captured value
+            string capturedValue = match.Groups[1].Value;
+            // Display the captured value
+            return capturedValue;
+        }
+        else
+        {
+            return "invalid url";
+        }
+
+    }
+
+}
