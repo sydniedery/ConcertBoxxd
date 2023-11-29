@@ -17,9 +17,8 @@ class Concerts(Base):
     Venue = Column(String)
 
     songs = relationship('Concert_Songs', back_populates='concert')
-
     def __repr__(self):
-        return f"<Concerts(ID={self.ID}, Mbid ='{self.Mbid},Date='{self.Date}', Artist='{self.Artist}', Tour='{self.Tour}', City='{self.City}', State='{self.State}', Venue='{self.Venue}')>"
+        return f"<Concerts(ID={self.ID}, Mbid='{self.Mbid}', Date='{self.Date}', Artist='{self.Artist}', Tour='{self.Tour}', City='{self.City}', State='{self.State}', Venue='{self.Venue}')>"
 
 class ConcertsCreate(BaseModel):
     ID: int
@@ -30,6 +29,7 @@ class ConcertsCreate(BaseModel):
     City: str
     State: str
     Venue: str
+
 class ConcertsRead(ConcertsCreate):
     class Config:
         orm_mode = True
@@ -64,7 +64,7 @@ class Concert_Songs(Base):
         return f"<Concert_Songs(Concert_ID={self.Concert_ID}, Song_ID='{self.Song_ID}')>"
 
 class Concert_SongsCreate(BaseModel):
-    Concert_ID: int
+    Concert_ID: str
     Song_ID: int
 
 

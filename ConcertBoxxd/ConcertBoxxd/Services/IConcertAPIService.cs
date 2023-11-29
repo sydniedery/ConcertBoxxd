@@ -5,9 +5,11 @@ namespace ConcertBoxxd.Data
 {
     public interface IConcertAPIService
     {
+        Task<int> ConcertCount();
+        Task<int> SongCount();
 
-        Task<List<Song_>> GetSetlist(string mbid, int id);
-        Task<Concert> GetConcertData(string mbid);
+        //Task<List<Song_>> GetSetlist(string mbid, int id);
+      //  Task<Concert> GetConcertData(string mbid, int id);
 
 
     }

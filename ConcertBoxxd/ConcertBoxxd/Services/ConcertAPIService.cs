@@ -31,7 +31,7 @@ namespace ConcertBoxxd.Services
         public string Name { get; set; }
         public City City { get; set; }
     }
-
+    
     public class Song
     {
         public string Name { get; set; }
@@ -71,26 +71,31 @@ namespace ConcertBoxxd.Services
         public Sets Sets { get; set; }
         public string Info { get; set; }
     }
-    public class ConcertAPIService : IConcertAPIService
+    public class ConcertAPIService
     {
         private HttpClient client;
 
         public ConcertAPIService()
         {
             client = new HttpClient();
-            client.BaseAddress = new Uri($"https://api.setlist.fm/rest/1.0/setlist/3ba10c34");
+            //client.BaseAddress = new Uri($"https://api.setlist.fm/rest/1.0/setlist/");
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Add("X-Api-Key", "lFMgUHCUEzzdvwIV6lCbO4bAxzZdPwUlzHrA");
             client.DefaultRequestHeaders.Accept.Add(
                new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        public async Task<Concert> GetConcertData(string mbid)
+
+
+
+        public async Task<Concert> GetConcertData(string mbid, int id)
         {
+            //client.BaseAddress = new Uri("http://something.com/api/");
+            //var response = await client.GetAsync(mbid);
             var apiResponse = await client.GetFromJsonAsync<JsonElement>($"https://api.setlist.fm/rest/1.0/setlist/{mbid}");
             // Deserialize the JSON into a C# object
             Root deserializedData = JsonConvert.DeserializeObject<Root>(apiResponse.ToString());
-           Concert concert = new Concert(deserializedData.Id, deserializedData.EventDate, deserializedData.Artist.Name, deserializedData.Tour.Name, deserializedData.Venue.City.Name, deserializedData.Venue.City.StateCode, deserializedData.Venue.Name);
+           Concert concert = new Concert(id, mbid, deserializedData.EventDate, deserializedData.Artist.Name, deserializedData.Tour.Name, deserializedData.Venue.City.Name, deserializedData.Venue.City.StateCode, deserializedData.Venue.Name);
             return concert;
         }
 

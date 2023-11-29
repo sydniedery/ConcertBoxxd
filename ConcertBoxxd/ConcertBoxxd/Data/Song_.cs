@@ -2,14 +2,14 @@
 {
     public class Song_
     {
-        public int Id { get; set; }
+        public int ID { get; set; }
         public string Name { get; set; }
 
         public Song_()
         { }
         public Song_(int id, string name)
         {
-            Id = id;
+            ID = id;
             Name = name;
         }
 
