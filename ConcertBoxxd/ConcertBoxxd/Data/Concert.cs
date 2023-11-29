@@ -5,6 +5,7 @@ namespace ConcertBoxxd.Data
     public class Concert
     {
         public int ID { get; set; }
+        public string Mbid { get; set; }
         public string Date { get; set; }
         public string Artist{ get; set; }
         public string Tour{ get; set; }
@@ -12,10 +13,12 @@ namespace ConcertBoxxd.Data
         public string State{ get; set; }
         public string Venue{ get; set; }
 
+        public Boolean IsRowExpanded { get; set; } = false;
         public Concert() { }
-        public Concert(int iD, string date, string artist, string tour, string city, string state, string venue)
+        public Concert(int iD, string mbid, string date, string artist, string tour, string city, string state, string venue)
         {
             ID = iD;
+            Mbid = mbid;
             Date = date;
             Artist = artist;
             Tour = tour;

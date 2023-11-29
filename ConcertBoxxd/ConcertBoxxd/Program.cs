@@ -1,13 +1,18 @@
 using ConcertBoxxd.Data;
+using ConcertBoxxd.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Syncfusion.Blazor;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddTransient<ConcertAPIService>();
+builder.Services.AddTransient<DBService>();
+builder.Services.AddTransient<FileAPIService>();
+builder.Services.AddSyncfusionBlazor();
 
 var app = builder.Build();
 

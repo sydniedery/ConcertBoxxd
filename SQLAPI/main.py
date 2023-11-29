@@ -4,6 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session, joinedload
 from pydantic import BaseModel
+from datetime import datetime
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import List
 
 # Imports from our models.py file
 from models import Base, ConcertsCreate, Concerts, ConcertsRead, SongCreate, SongRead, Songs, Concert_Songs, Concert_SongsCreate,  Concert_SongsRead
@@ -47,6 +52,14 @@ def get_db():
 #    db_songs = db.query(Concerts).options(joinedload(Concerts.songs)).all()
 #    return db_songs
 
+@app.get("/Songs/Count")
+async def get_songcount(db: Session = Depends(get_db)):
+    return db.query(Songs).count()
+
+@app.get("/Concerts/Count")
+async def get_concertcount(db: Session = Depends(get_db)):
+    return db.query(Concerts).count()
+
 @app.get("/Songs")
 async def get_all_songs(db: Session = Depends(get_db)):
     song_list = db.query(Songs).all()
@@ -60,7 +73,7 @@ async def get_shows(db: Session = Depends(get_db)):
     show_list = db.query(Concerts).all()
     return [{"ID": concert.ID, "Mbid": concert.Mbid, "Date": concert.Date, "Artist": concert.Artist, "Tour" : concert.Tour, "City" : concert.City, "State": concert.State, "Venue": concert.Venue} for concert in show_list]
 
-@app.get("Concerts/Songs/{concertID}")
+@app.get("/Concerts/Songs/{concertID}")
 async def get_songs(concertID: int, db: Session = Depends(get_db)):
     try:
         # Assuming that concertID is the ID of the concert for which you want to get songs
@@ -70,12 +83,14 @@ async def get_songs(concertID: int, db: Session = Depends(get_db)):
     except Exception as e:
         logging.error(f"Error getting songs: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
-    
+
+
+
 @app.get("/Concerts/{concertID}")
 async def get_concert(concertID: int, db: Session = Depends(get_db)):
     try:
         # Assuming that concertID is the ID of the concert for which you want to get songs
-        concert = db.query(Concerts).filter(Concerts.Concert_ID == concertID).all()
+        concert = db.query(Concerts).filter(Concerts.ID == concertID).first()
         logging.debug(f"Retrieved songs: {concert}")
         return concert
     except Exception as e:
@@ -86,7 +101,7 @@ async def get_concert(concertID: int, db: Session = Depends(get_db)):
 async def get_song(songID: int, db: Session = Depends(get_db)):
     try:
         # Assuming that concertID is the ID of the concert for which you want to get songs
-        song = db.query(Songs).filter(Songs.Song_ID == songID).all()
+        song = db.query(Songs).filter(Songs.ID == songID).first()
         logging.debug(f"Retrieved songs: {song}")
         return song
     except Exception as e:
@@ -94,21 +109,31 @@ async def get_song(songID: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 #POST request
+# POST request
 @app.post("/Concerts")
-async def add_concert(concert: ConcertsCreate, db: Session = Depends(get_db)):
-    # Check if the pokemon already exists in the database
-    if db.query(Concerts).filter(Concerts.ID == concert.ID).first() is not None:
+async def add_concert(concert_create: ConcertsCreate, db: Session = Depends(get_db)):
+    # Check if the concert already exists in the database
+    if db.query(Concerts).filter(Concerts.ID == concert_create.ID).first() is not None:
         raise HTTPException(status_code=400, detail="Concert already exists")
 
-    # Create a new Pokemon object using the PokemonCreate model
-    new_concert = Concerts(id=concert.ID, Mbid=concert.Mbid, Date=concert.Date, Artist= concert.Artist, Tour =concert.Tour, City=concert.City, State=concert.State, Venue=concert.Venue)
+    # Create a new Concert object using the ConcertsCreate model
+    new_concert = Concerts(
+        ID=concert_create.ID,
+        Mbid=concert_create.Mbid,
+        Date=concert_create.Date,
+        Artist=concert_create.Artist,
+        Tour=concert_create.Tour,
+        City=concert_create.City,
+        State=concert_create.State,
+        Venue=concert_create.Venue
+    )
 
-    # Add the new Pokemon object to the database
+    # Add the new Concert object to the database
     db.add(new_concert)
     db.commit()
     db.refresh(new_concert)
 
-    # Return the new Pokemon object using the PokemonRead model
+    # Return the new Concert object using the ConcertsRead model
     return new_concert
 
 @app.post("/Songs")
@@ -127,6 +152,24 @@ async def add_song(song: SongCreate, db: Session = Depends(get_db)):
 
     # Return the new Pokemon object using the PokemonRead model
     return new_song
+
+@app.post("/Concerts/Songs")
+async def add_concert_song(info: Concert_SongsCreate, db: Session = Depends(get_db)):
+    # Check if the pokemon already exists in the database
+    if db.query(Concert_Songs).filter((Concert_Songs.Concert_ID == info.Concert_ID)&(Concert_Songs.Song_ID == info.Song_ID)).first() is not None:
+        raise HTTPException(status_code=400, detail="Song already exists")
+
+    # Create a new Pokemon object using the PokemonCreate model
+    new_song = Concert_Songs(Concert_ID=info.Concert_ID, Song_ID=info.Song_ID)
+
+    # Add the new Pokemon object to the database
+    db.add(new_song)
+    db.commit()
+    db.refresh(new_song)
+
+    # Return the new Pokemon object using the PokemonRead model
+    return new_song
+
 
 # PUT request
 @app.put("/Songs/{id}")
@@ -276,16 +319,3 @@ async def delete_concert(id: int, db: Session = Depends(get_db)):
 
     # Return a success message
     return {"message": "Concert deleted"}
-
-@app.delete("/Songs/{id}")
-async def delete_song(id: int, db: Session = Depends(get_db)):
-    # Check if the pokemon already exists in the database
-    if db.query(Concerts).filter(Songs.ID == id).first() is None:
-        raise HTTPException(status_code=404, detail="Concert not found")
-
-    # Delete the Pokemon object from the database
-    db.query(Songs).filter(Songs.ID == id).delete()
-    db.commit()
-
-    # Return a success message
-    return {"message": "Song deleted"}
