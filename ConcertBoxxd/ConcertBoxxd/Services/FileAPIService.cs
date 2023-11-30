@@ -73,24 +73,30 @@ namespace ConcertBoxxd.Services
             }
         }
 
-        public async Task<List<KeyValuePair<string, int>>> GetStats()
+        public async Task<List<ArtistConcertCount>> GetStats()
         {
             try
             {
                 var response = await client.GetStringAsync($"{BASE_ADDR}/Concerts/Count/Artists");
 
-                var apiResponse = JsonConvert.DeserializeObject<List<KeyValuePair<string, int>>> (response);
-
+                // Deserialize the JSON response into a list of ArtistConcertCount objects
+                var apiResponse = JsonConvert.DeserializeObject<List<ArtistConcertCount>>(response);
 
                 if (apiResponse != null)
                 {
-                    //working on this. delete whole method if needed
+                    // Display the deserialized data in the console
+                    foreach (var item in apiResponse)
+                    {
+                        Console.WriteLine($"Artist: {item.Artist}, Concert Count: {item.ConcertCount}");
+                    }
+
                     return apiResponse;
                 }
                 else
                 {
+                    Console.WriteLine("Error: The API response is not in the expected format.");
                     // Handle the case when the API response is not in the expected format
-                    return new List<KeyValuePair<string, int>>();
+                    return new List<ArtistConcertCount>();
                 }
             }
             catch (Exception ex)
@@ -101,18 +107,45 @@ namespace ConcertBoxxd.Services
             }
         }
 
+        public async Task<List<Concert>> GetConcerts()
+        {
+            try
+            {
+                var response = await client.GetStringAsync($"{BASE_ADDR}/Concerts");
+
+                var apiResponse = JsonConvert.DeserializeObject<List<Concert>>(response);
+
+
+                if (apiResponse != null)
+                {
+                    //working on this. delete whole method if needed
+                    return apiResponse;
+                }
+                else
+                {
+                    // Handle the case when the API response is not in the expected format
+                    return new List<Concert>();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions (e.g., network issues, JSON deserialization errors)
+                Console.WriteLine($"Error: {ex.Message}");
+                throw;
+            }
+        }
         public async Task PostConcert(Concert concert)
         {
             try
             {
-                string json = '{' + $"\"ID\":{concert.ID},\n" +
+                string json = '{' + $"\"ID\":\"{concert.ID}\",\n" +
                                     $"\"Mbid\":\"{concert.Mbid}\",\n" +
                                     $"\"Date\":\"{concert.Date}\",\n" +
                                     $"\"Artist\":\"{concert.Artist}\",\n" +
                                     $"\"Tour\":\"{concert.Tour}\",\n" +
                                     $"\"City\":\"{concert.City}\",\n" +
                                     $"\"State\":\"{concert.State}\",\n" +
-                                    $"\"Venue\":\"{concert.Venue}\"" + '}';
+                                    $"\"Venue\":\"{concert.Venue}\"\n" + '}';
 
                 StringContent JsonContent = new StringContent(json, Encoding.UTF8, "application/json");
                 await client.PostAsync($"{BASE_ADDR}/Concerts", JsonContent);
@@ -156,9 +189,9 @@ namespace ConcertBoxxd.Services
             }
         }
 
-        public async Task DeleteConcert(int id)
+        public async Task DeleteConcert(Concert concert)
         {
-            await client.DeleteAsync($"{BASE_ADDR}/Concerts/{id}");
+            await client.DeleteAsync($"{BASE_ADDR}/Concerts/{concert.ID}");
         }
 
         public async Task DeleteSong(int id)

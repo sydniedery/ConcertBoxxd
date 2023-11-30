@@ -26,6 +26,17 @@ namespace ConcertBoxxd.Data
             State = state;
             Venue = venue;
         }
+        public Concert(int iD, string mbid, string date, string artist, string city, string state, string venue)
+        {
+            ID = iD;
+            Mbid = mbid;
+            Date = date;
+            Artist = artist;
+            Tour = "n/a";
+            City = city;
+            State = state;
+            Venue = venue;
+        }
     }
 
 

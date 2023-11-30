@@ -95,8 +95,19 @@ namespace ConcertBoxxd.Services
             var apiResponse = await client.GetFromJsonAsync<JsonElement>($"https://api.setlist.fm/rest/1.0/setlist/{mbid}");
             // Deserialize the JSON into a C# object
             Root deserializedData = JsonConvert.DeserializeObject<Root>(apiResponse.ToString());
-           Concert concert = new Concert(id, mbid, deserializedData.EventDate, deserializedData.Artist.Name, deserializedData.Tour.Name, deserializedData.Venue.City.Name, deserializedData.Venue.City.StateCode, deserializedData.Venue.Name);
-            return concert;
+            if(deserializedData.Tour != null)
+            {
+                Concert concert = new Concert(id, mbid, deserializedData.EventDate, deserializedData.Artist.Name, deserializedData.Tour.Name, deserializedData.Venue.City.Name, deserializedData.Venue.City.StateCode, deserializedData.Venue.Name);
+                return concert;
+
+            }
+            else
+            {
+                Concert concert = new Concert(id, mbid, deserializedData.EventDate, deserializedData.Artist.Name, "n/a", deserializedData.Venue.City.Name, deserializedData.Venue.City.StateCode, deserializedData.Venue.Name);
+                return concert;
+
+            }
+
         }
 
         public async Task<List<Song>> GetSetlist(string mbid, int id, int songCount)

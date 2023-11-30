@@ -18,10 +18,10 @@ class Concerts(Base):
 
     songs = relationship('Concert_Songs', back_populates='concert')
     def __repr__(self):
-        return f"<Concerts(ID={self.ID}, Mbid='{self.Mbid}', Date='{self.Date}', Artist='{self.Artist}', Tour='{self.Tour}', City='{self.City}', State='{self.State}', Venue='{self.Venue}')>"
+        return f"<Concerts(ID={self.ID}, Mbid='{self.Mbid}', Date='{self.Date}', Artist='{self.Artist}', Tour='{self.Tour}', City='{self.City}', State='{self.State}', Venue='{self.Venue}', ShowMe='{self.ShowMe}')>"
 
 class ConcertsCreate(BaseModel):
-    ID: int
+   # ID: int
     Mbid: str
     Date: str
     Artist: str
