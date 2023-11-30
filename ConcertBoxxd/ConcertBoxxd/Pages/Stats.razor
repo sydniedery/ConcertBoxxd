@@ -8,8 +8,9 @@
 <PageTitle>Stats</PageTitle>
 
 <h1>Stats</h1>
+<br />
 
-<table>
+<table class="table">
     <thead>
         <tr>
             <td>Artist</td>
@@ -17,11 +18,13 @@
         </tr>
     </thead>
     <tbody>
+
         @foreach (var band in stats)
         {
             <tr>
-                <td>@band.Key.</td>
-                <td>@band.Value</td>
+                <td>@band.Artist</td>
+                <td>@band.ConcertCount</td>
+
             </tr>
         }
     </tbody>
@@ -29,12 +32,12 @@
 </table>
 
 @code {
-    public List<KeyValuePair<string, int>> stats = new List<KeyValuePair<string, int>>();
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender)
-            {
-                stats  = await dbservice.GetStats();
-            }
-        }
+    public List<ArtistConcertCount> stats = new List<ArtistConcertCount>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        stats = await dbservice.GetStats();
+
+    }
+
 }

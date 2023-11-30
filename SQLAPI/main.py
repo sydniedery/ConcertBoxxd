@@ -115,9 +115,10 @@ async def get_artists_concert_count(db: Session = Depends(get_db)):
     try:
         # Query the database to get the count of concerts for each artist
         artist_counts = db.query(Concerts.Artist, func.count(Concerts.ID).label("concert_count")).group_by(Concerts.Artist).all()
+        logging.debug(f"Retrieved songs: {artist_counts}")
 
         # Return the counts as a JSON response
-        return [{"artist": artist, "concert_count": concert_count} for artist, concert_count in artist_counts]
+        return [{"Artist": artist, "ConcertCount": concert_count} for artist, concert_count in artist_counts]
 
     except Exception as e:
         # Log the error and return an internal server error response
@@ -129,12 +130,11 @@ async def get_artists_concert_count(db: Session = Depends(get_db)):
 @app.post("/Concerts")
 async def add_concert(concert_create: ConcertsCreate, db: Session = Depends(get_db)):
     # Check if the concert already exists in the database
-    if db.query(Concerts).filter(Concerts.ID == concert_create.ID).first() is not None:
+    if db.query(Concerts).filter(Concerts.Mbid == concert_create.Mbid).first() is not None:
         raise HTTPException(status_code=400, detail="Concert already exists")
 
     # Create a new Concert object using the ConcertsCreate model
     new_concert = Concerts(
-        ID=concert_create.ID,
         Mbid=concert_create.Mbid,
         Date=concert_create.Date,
         Artist=concert_create.Artist,

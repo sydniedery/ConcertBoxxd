@@ -29,6 +29,7 @@
                 <td>@item.Key.Tour</td>
                 <td>@item.Key.Venue</td>
                 <td>@item.Key.City , @item.Key.State</td>
+                <td><button class="btn btn-warning" @onclick="() => Delete(item.Key)">Delete</button></td>
             </tr>
             if (item.Key.IsRowExpanded)
             {
@@ -39,7 +40,7 @@
 
                 for(int i = 0; i < splitem.Count; i++)
                 {
-                    <tr border="none">
+                    <tr border="none" background-color="grey">
                         @foreach( var song in splitem[i])
                         {
                             <td>@song.Name</td>
@@ -64,12 +65,11 @@
     protected override async Task OnAfterRenderAsync(bool firstRender) {
         if (firstRender) {
             int totalConcerts = await dbservice.ConcertCount();
-
-            for (int i = 1; i <= totalConcerts; i++) 
+            shows = await dbservice.GetConcerts();
+            foreach(var concert in shows)
             {
-               Concert tempConcert = (await dbservice.GetConcert(i));
-               List<Song> temoSetlist = (await dbservice.GetSetlist(i));
-               showSongs.Add(tempConcert, temoSetlist);
+               List<Song> temoSetlist = (await dbservice.GetSetlist(concert.ID));
+               showSongs.Add(concert, temoSetlist);
 
                 StateHasChanged();
             }
@@ -134,9 +134,11 @@
         }
 
     }
-    public async Task Delete(int id)
+    public async Task Delete(Concert concert)
     {
-        await dbservice.DeleteConcert(id);
+        await dbservice.DeleteConcert(concert);
+        NavigationManager.NavigateTo("/", true);
+
     }
 
 }
