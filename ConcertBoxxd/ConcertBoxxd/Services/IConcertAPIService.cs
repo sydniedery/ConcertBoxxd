@@ -8,7 +8,7 @@ namespace ConcertBoxxd.Data
         Task<int> ConcertCount();
         Task<int> SongCount();
 
-        //Task<List<Song_>> GetSetlist(string mbid, int id);
+        //Task<List<Song>> GetSetlist(string mbid, int id);
       //  Task<Concert> GetConcertData(string mbid, int id);
 
 

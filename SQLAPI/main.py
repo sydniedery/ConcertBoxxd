@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, Session, joinedload
 from pydantic import BaseModel
 from datetime import datetime
@@ -97,18 +97,34 @@ async def get_concert(concertID: int, db: Session = Depends(get_db)):
         logging.error(f"Error getting concert: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
     
-@app.get("/Songs/{songID}")
-async def get_song(songID: int, db: Session = Depends(get_db)):
+@app.get("/Songs/{songName}")
+async def get_song(songName: str, db: Session = Depends(get_db)):
     try:
         # Assuming that concertID is the ID of the concert for which you want to get songs
-        song = db.query(Songs).filter(Songs.ID == songID).first()
+        song = db.query(Songs).filter(Songs.Name == songName).first()
         logging.debug(f"Retrieved songs: {song}")
         return song
     except Exception as e:
         logging.error(f"Error getting song: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+    
 
-#POST request
+# Add this endpoint to your FastAPI app
+@app.get("/Concerts/Count/Artists")
+async def get_artists_concert_count(db: Session = Depends(get_db)):
+    try:
+        # Query the database to get the count of concerts for each artist
+        artist_counts = db.query(Concerts.Artist, func.count(Concerts.ID).label("concert_count")).group_by(Concerts.Artist).all()
+
+        # Return the counts as a JSON response
+        return [{"artist": artist, "concert_count": concert_count} for artist, concert_count in artist_counts]
+
+    except Exception as e:
+        # Log the error and return an internal server error response
+        logging.error(f"Error getting concert counts by artists: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+    
 # POST request
 @app.post("/Concerts")
 async def add_concert(concert_create: ConcertsCreate, db: Session = Depends(get_db)):
@@ -139,11 +155,11 @@ async def add_concert(concert_create: ConcertsCreate, db: Session = Depends(get_
 @app.post("/Songs")
 async def add_song(song: SongCreate, db: Session = Depends(get_db)):
     # Check if the pokemon already exists in the database
-    if db.query(Songs).filter(Songs.ID == song.ID).first() is not None:
+    if db.query(Songs).filter(Songs.Name == song.Name).first() is not None:
         raise HTTPException(status_code=400, detail="Song already exists")
 
     # Create a new Pokemon object using the PokemonCreate model
-    new_song = Songs(ID=song.ID, Name=song.Name)
+    new_song = Songs(Name=song.Name)
 
     # Add the new Pokemon object to the database
     db.add(new_song)
@@ -155,20 +171,36 @@ async def add_song(song: SongCreate, db: Session = Depends(get_db)):
 
 @app.post("/Concerts/Songs")
 async def add_concert_song(info: Concert_SongsCreate, db: Session = Depends(get_db)):
-    # Check if the pokemon already exists in the database
-    if db.query(Concert_Songs).filter((Concert_Songs.Concert_ID == info.Concert_ID)&(Concert_Songs.Song_ID == info.Song_ID)).first() is not None:
-        raise HTTPException(status_code=400, detail="Song already exists")
+    try:
+        # Logging for debugging
+        logging.debug(f"Received request to add Concert_Songs: {info}")
 
-    # Create a new Pokemon object using the PokemonCreate model
-    new_song = Concert_Songs(Concert_ID=info.Concert_ID, Song_ID=info.Song_ID)
+        # Check if the song already exists in the database
+        if db.query(Concert_Songs).filter((Concert_Songs.Concert_ID == info.Concert_ID) & (Concert_Songs.Song_ID == info.Song_ID)).first() is not None:
+            raise HTTPException(status_code=400, detail="Song already exists")
 
-    # Add the new Pokemon object to the database
-    db.add(new_song)
-    db.commit()
-    db.refresh(new_song)
+        # Create a new Concert_Songs object using the Concert_SongsCreate model
+        new_concert_song = Concert_Songs(Concert_ID=info.Concert_ID, Song_ID=info.Song_ID)
 
-    # Return the new Pokemon object using the PokemonRead model
-    return new_song
+        # Logging for debugging
+        logging.debug(f"Adding Concert_Songs to the database: {new_concert_song}")
+
+        # Add the new Concert_Songs object to the database
+        db.add(new_concert_song)
+        db.commit()
+        db.refresh(new_concert_song)
+
+        # Logging for debugging
+        logging.debug(f"Concert_Songs added successfully: {new_concert_song}")
+
+        # Return the new Concert_Songs object using the Concert_SongsRead model
+        return new_concert_song
+
+    except Exception as e:
+        # Logging for debugging
+        logging.error(f"Error adding Concert_Songs: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 
 
 # PUT request
@@ -307,15 +339,32 @@ async def delete_song(id: int, db: Session = Depends(get_db)):
     # Return a success message
     return {"message": "Song deleted"}
 
+from fastapi import HTTPException
+
+# ... (your existing imports)
+
+# DELETE request
 @app.delete("/Concerts/{id}")
 async def delete_concert(id: int, db: Session = Depends(get_db)):
-    # Check if the pokemon already exists in the database
-    if db.query(Concerts).filter(Concerts.ID == id).first() is None:
-        raise HTTPException(status_code=404, detail="Concert not found")
+    try:
+        # Check if the concert already exists in the database
+        concert = db.query(Concerts).filter(Concerts.ID == id).first()
+        if concert is None:
+            raise HTTPException(status_code=404, detail="Concert not found")
 
-    # Delete the Pokemon object from the database
-    db.query(Concerts).filter(Concerts.ID == id).delete()
-    db.commit()
+        # Delete concert appearances from Concert_Songs table
+        concert_songs = db.query(Concert_Songs).filter(Concert_Songs.Concert_ID == id)
+        concert_songs.delete()
 
-    # Return a success message
-    return {"message": "Concert deleted"}
+        # Delete concert from Concerts table
+        db.query(Concerts).filter(Concerts.ID == id).delete()
+
+        db.commit()
+
+        # Return a success message
+        return {"message": "Concert deleted"}
+
+    except Exception as e:
+        # Log the error and return an internal server error response
+        logging.error(f"Error deleting concert: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")

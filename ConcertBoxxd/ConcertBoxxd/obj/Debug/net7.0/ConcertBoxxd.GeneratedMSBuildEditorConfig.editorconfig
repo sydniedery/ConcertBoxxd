@@ -20,12 +20,12 @@ build_property._RazorSourceGeneratorDebug =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/sydni/OneDrive - East Tennessee State University/Semester 7/Server Side/Project/ConcertBoxxd/ConcertBoxxd/Pages/Counter.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = 
-
 [C:/Users/sydni/OneDrive - East Tennessee State University/Semester 7/Server Side/Project/ConcertBoxxd/ConcertBoxxd/Pages/Index.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/sydni/OneDrive - East Tennessee State University/Semester 7/Server Side/Project/ConcertBoxxd/ConcertBoxxd/Pages/Stats.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhdHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/sydni/OneDrive - East Tennessee State University/Semester 7/Server Side/Project/ConcertBoxxd/ConcertBoxxd/Shared/SurveyPrompt.razor]

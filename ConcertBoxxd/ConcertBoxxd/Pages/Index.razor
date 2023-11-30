@@ -5,9 +5,11 @@
 @inject DBService dbservice
 @using System;
 @using System.Text.RegularExpressions;
-
+<h1>Paste a Setlist.fm link to add a concert!</h1>
 <input class="form-control" type="text" @bind=concertlink />
 <button class="btn btn-primary" @onclick="GetConcert">Add Concert</button>
+<br />
+<br />
 <table class="table">
     <thead>
         <tr>
@@ -19,32 +21,44 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var concert in shows)
+        @foreach (var item in showSongs)
         {
-            <tr @onclick="() => concert.IsRowExpanded = !concert.IsRowExpanded">
-                <td>@concert.Artist</td>
-                <td>@concert.Date</td>
-                <td>@concert.Tour</td>
-                <td>@concert.Venue</td>
-                <td>@concert.City , @concert.State</td>
+            <tr @onclick="() => item.Key.IsRowExpanded = !item.Key.IsRowExpanded">
+                <td>@item.Key.Artist</td>
+                <td>@item.Key.Date</td>
+                <td>@item.Key.Tour</td>
+                <td>@item.Key.Venue</td>
+                <td>@item.Key.City , @item.Key.State</td>
             </tr>
-            if (concert.IsRowExpanded)
+            if (item.Key.IsRowExpanded)
             {
-                <tr>
+                List<List<Song>> splitem = item.Value.Select((x, i) => new { Index = i, Value = x })
+                .GroupBy(x => x.Index / 5)
+                .Select(x => x.Select(v => v.Value).ToList())
+                .ToList();
 
-                </tr>
+                for(int i = 0; i < splitem.Count; i++)
+                {
+                    <tr border="none">
+                        @foreach( var song in splitem[i])
+                        {
+                            <td>@song.Name</td>
+                        }
+                    </tr>
+                }
             }
+
         }
     </tbody>
 </table>
-
 
 @code
 {
     @inject NavigationManager NavigationManager;
     public string concertlink = "";
     public List<Concert> shows = new List<Concert>();
-    public List<Song_> setlist = new List<Song_>();
+    public List<Song> setlist = new List<Song>();
+    public Dictionary<Concert, List<Song>> showSongs = new Dictionary<Concert, List<Song>>();
     //public List<Song> setlist
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
@@ -54,7 +68,8 @@
             for (int i = 1; i <= totalConcerts; i++) 
             {
                Concert tempConcert = (await dbservice.GetConcert(i));
-                List<Song_> temoSetlist = (await dbservice.GetSetlist(i));
+               List<Song> temoSetlist = (await dbservice.GetSetlist(i));
+               showSongs.Add(tempConcert, temoSetlist);
 
                 StateHasChanged();
             }
@@ -68,12 +83,35 @@
         string mbid = GetMbid(concertlink);
         Concert concertHolder = await setlistfm.GetConcertData(mbid, index);
         await dbservice.PostConcert(concertHolder);
+        await GetSetlist(mbid, index);
         NavigationManager.NavigateTo("/", true);
         concertlink = "";
 
     }
-    public async Task GetSetlist(string mbid, int index)
+    public async Task GetSetlist(string mbid, int id)
     {
+        int songCount = await dbservice.SongCount();
+        setlist = await setlistfm.GetSetlist(mbid, id, songCount);
+        foreach (Song song in setlist)
+        {
+          //  string check = await dbservice.GetSong(song.Name);
+            //if (check != null)
+            //{
+            try
+            {
+                await dbservice.PostSong(song);
+
+                Song songy =  await dbservice.GetSong(song.Name);
+                await dbservice.PostConcertSong(id, songy.ID);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("oh naur cleur");
+            }
+
+            //}
+
+        }
     }
     public string GetMbid(string url)
     {
@@ -96,5 +134,10 @@
         }
 
     }
+    public async Task Delete(int id)
+    {
+        await dbservice.DeleteConcert(id);
+    }
 
 }
+ <script src="/_framework/aspnetcore-browser-refresh.js"></script>

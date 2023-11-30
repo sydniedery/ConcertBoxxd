@@ -69,3 +69,13 @@ a, .btn-link {
 .hiddenRow {
     padding: 0 !important;
 }
+
+ul {
+    column-count: 2;
+}
+
+table {
+    border: dashed;
+    border-color: dimgray;
+    border-width: 2px;
+}

@@ -31,14 +31,14 @@ namespace ConcertBoxxd.Services
         public string Name { get; set; }
         public City City { get; set; }
     }
-    
+    /*
     public class Song
     {
         public string Name { get; set; }
         public Cover Cover { get; set; }
         public string Info { get; set; }
     }
-
+    */
     public class Cover
     {
         public string Mbid { get; set; }
@@ -99,25 +99,25 @@ namespace ConcertBoxxd.Services
             return concert;
         }
 
-        public async Task<List<Song_>> GetSetlist(string mbid, int id)
+        public async Task<List<Song>> GetSetlist(string mbid, int id, int songCount)
         {
-            List<Song_> setlist = new List<Song_>();
+            List<Song> setlist = new List<Song>();
 
             var apiResponse = await client.GetFromJsonAsync<JsonElement>($"https://api.setlist.fm/rest/1.0/setlist/{mbid}");
             // Deserialize the JSON into a C# object
             Root deserializedData = JsonConvert.DeserializeObject<Root>(apiResponse.ToString());
             foreach (var set in deserializedData.Sets.Set)
-            { 
+            {
                 foreach(var song in set.Song)
                 {
-                    setlist.Add(new Song_(id, song.Name));
-
+                    songCount++;
+                    setlist.Add(new Song(songCount, song.Name));
                 }
             }
 
-
             return setlist;
         }
+
 
     }
 }
