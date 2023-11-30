@@ -1,0 +1,40 @@
+﻿@page "/stats"
+@using ConcertBoxxd.Data;
+@using ConcertBoxxd.Services;
+@inject ConcertAPIService setlistfm
+@inject DBService dbservice
+@using System;
+@using System.Text.RegularExpressions;
+<PageTitle>Stats</PageTitle>
+
+<h1>Stats</h1>
+
+<table>
+    <thead>
+        <tr>
+            <td>Artist</td>
+            <td>Shows Attended</td>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var band in stats)
+        {
+            <tr>
+                <td>@band.Key.</td>
+                <td>@band.Value</td>
+            </tr>
+        }
+    </tbody>
+
+</table>
+
+@code {
+    public List<KeyValuePair<string, int>> stats = new List<KeyValuePair<string, int>>();
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                stats  = await dbservice.GetStats();
+            }
+        }
+}

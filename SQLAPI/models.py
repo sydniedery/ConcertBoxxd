@@ -45,7 +45,7 @@ class Songs(Base):
         return f"<Songs(ID={self.ID}, Name='{self.Name}')>"
 
 class SongCreate(BaseModel):
-    ID: int
+    #ID: int
     Name: str
 
 class SongRead(SongCreate):
@@ -64,7 +64,7 @@ class Concert_Songs(Base):
         return f"<Concert_Songs(Concert_ID={self.Concert_ID}, Song_ID='{self.Song_ID}')>"
 
 class Concert_SongsCreate(BaseModel):
-    Concert_ID: str
+    Concert_ID: int
     Song_ID: int
 
 

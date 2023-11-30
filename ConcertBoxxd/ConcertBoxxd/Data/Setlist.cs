@@ -4,7 +4,7 @@ namespace ConcertBoxxd.Data
 {
     public class Setlist
     {
-        public List<Song_> Songs { get; set; }
+        public List<Song> Songs { get; set; }
 
     }
 }
